@@ -1,0 +1,77 @@
+create table users (
+    id int primary key not null AUTO_INCREMENT,
+    userid varchar(100) not null,
+    password varchar(250) not null
+);
+-----------
+
+create table product (
+    id int primary key not null AUTO_INCREMENT,
+    name nvarchar(100) not null,
+    description nvarchar(1000) null,
+    price int not null
+);
+-----------
+
+DELIMITER //
+CREATE PROCEDURE usp_ins_product(
+    IN p_name NVARCHAR(100),
+    IN p_description NVARCHAR(1000),
+    IN p_price INT
+)
+BEGIN
+    INSERT INTO product (name, description, price)
+    VALUES (p_name, p_description, p_price);
+END //
+DELIMITER ;
+-----------
+
+DELIMITER //
+CREATE PROCEDURE usp_upd_product(
+    IN p_id INT,
+    IN p_name NVARCHAR(100),
+    IN p_description NVARCHAR(1000),
+    IN p_price INT
+)
+BEGIN
+    UPDATE product
+    SET
+        name = p_name,
+        description = p_description,
+        price = p_price
+    WHERE
+        id = p_id;
+END //
+DELIMITER ;
+-----------
+
+DELIMITER //
+CREATE PROCEDURE usp_del_product(
+    IN p_id INT
+)
+BEGIN
+    DELETE FROM product
+    WHERE
+        id = p_id;
+END //
+DELIMITER ;
+-----------
+
+DELIMITER //
+CREATE PROCEDURE usp_list_product()
+BEGIN
+    SELECT * FROM product;
+END //
+DELIMITER ;
+-----------
+
+DELIMITER //
+CREATE PROCEDURE usp_get_product(
+    IN p_id INT
+)
+BEGIN
+    SELECT * FROM product
+    WHERE id = p_id;
+END //
+DELIMITER ;
+-----------
