@@ -12,7 +12,6 @@ const authenticateToken = async (req, res, next) => {
             return res.status(401).json({ error: "Unauthorized - Token not provided" });
         }
         token =  token.split(' ')[1];
-        console.log(token);
         await jwt.verify(token, process.env.SECRET);
         
         next();
@@ -33,7 +32,7 @@ router.get("/all", async (req, res) => {
                 console.error('Error executing MySQL query:', error);
                 return res.status(500).json({ error: 'Internal Server Error' });
             } else {
-                return res.json(results);
+                return res.status(200).json(results);
             }
         });
 
@@ -57,7 +56,7 @@ router.get("/:id", async (req, res) => {
                 console.error('Error executing MySQL query:', error);
                 return res.status(500).json({ error: 'Internal Server Error' });
             } else {
-                return res.json(results);
+                return res.status(200).json(results);
             }
         });
 
@@ -82,7 +81,7 @@ router.post("/create", async (req, res) => {
                 console.error('Error executing MySQL query:', error);
                 return res.status(500).json({ error: 'Internal Server Error' });
             } else {
-                return res.status(201).json({ id: results.id, name, description, price });
+                return res.status(200).json({ id: results.id, name, description, price });
             }
         });
     } catch (error) {
@@ -133,7 +132,7 @@ router.delete("/:id", async (req, res) => {
                 console.error('Error executing MySQL query:', error);
                 return res.status(500).json({ error: 'Internal Server Error' });
             } else {
-                return res.json(results);
+                return res.status(200).json(results);
             }
         });
 
