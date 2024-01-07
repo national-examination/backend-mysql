@@ -16,6 +16,14 @@ describe('Authentication API Tests', () => {
     expect(response.body).toHaveProperty('userid', 'testuser');
   });
 
+  it('should check if all inputs are provided', async () => {
+    const response = await request(app)
+      .post('/login')
+      .send({ });
+
+    expect(response.status).toBe(400);
+  });
+
   it('should log in a user and return a token', async () => {
     const response = await request(app)
       .post('/login')
@@ -24,4 +32,13 @@ describe('Authentication API Tests', () => {
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('token');
   });
+
+  it('should check if we have a wrong password', async () => {
+    const response = await request(app)
+      .post('/login')
+      .send({ userid: 'testuser', password: 'wrong password' });
+
+    expect(response.status).toBe(400);
+  });
+
 });

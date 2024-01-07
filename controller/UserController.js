@@ -6,42 +6,75 @@ const dbConnection = require('../db/db');
 const router = Router();
 
 const { SECRET = "secret" } = process.env;
+const dbService = require("../Services/DbService");
 
-// Signup route to create a new user
+// Signup route
 router.post("/signup", async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        const query = 'INSERT INTO users (userid, password) VALUES (?, ?)';
-        const rows = dbConnection.query(query, [req.body.userid, hashedPassword]);
-        res.status(200).json({ userid: req.body.userid, password: req.body.hashedPassword, message: "Created successfuly!" });
+        const parameters = [
+            { ParamName: "userid", Value: req.body.userid, Direction: 0, DataType: "varchar" },
+            { ParamName: "password", Value: hashedPassword, Direction: 0, DataType: "varchar" }
+        ];
+
+        let email = [
+            { ParamName: "userid", Value: req.body.userid, Direction: 0, DataType: "varchar" },
+        ]
+
+        await dbService.common_db_call("usp_get_user_email", email, async (err, results) => {
+            if (err) {
+                console.log("data service error: " + err);
+                return res.status(500).send("data service error: " + err.message);
+            }
+            const user = results[0].length;
+            console.log(user)
+            if (user != 0) {
+                return res.status(400).json({ error: "User already exist!" });
+            } else {
+                await dbService.common_db_call("usp_ins_user", parameters, (err, result) => {
+                    if (err) {
+                        console.log("data service error: " + err);
+                        return res.status(500).send("data service error 1: " + err.message);
+                    }
+                    return res.status(201).json({ message: "Created successfully!" })
+                });
+            }
+        });
     } catch (error) {
-        res.status(400).json({ error });
+        res.status(400).json({ error: error.message || "An error occurred." });
     }
 });
 
-// Login route to verify a user and get a token
+// Login route
 router.post("/login", async (req, res) => {
     try {
-        const query = 'SELECT * FROM users WHERE userid = ?';
-        dbConnection.query(query, [req.body.userid], async (error, results) => {
-            if (error) {
-                console.error('Error executing MySQL query:', error);
-                return res.status(500).json({ error: 'Internal Server Error' });
-            } else {
-                const user = results[0];
-                if (user) {
-                    const result = await bcrypt.compare(req.body.password, user.password);
-                    if (result) {
-                        const token = await jwt.sign({ userid: user.userid }, SECRET);
-                        return res.json({ token });
-                    } else {
-                        return res.status(400).json({ error: "Password doesn't match" });
-                    }
+        if (!req.body.userid || !req.body.password)
+            return res.status(400).send("Enter all inputs");
+
+        const parameters = [
+            { ParamName: "userid", Value: req.body.userid, Direction: 0, DataType: "varchar" }
+        ];
+
+        await dbService.common_db_call("usp_get_user_email", parameters, async (err, results) => {
+            if (err) {
+                console.log("data service error: " + err);
+                return res.status(500).send("data service error: " + err.message);
+            }
+            const user = results[0];
+            console.log(user);
+            if (user.length != 0) {
+                const result = await bcrypt.compare(req.body.password, user[0].password);
+                if (result) {
+                    const token = await jwt.sign({ userid: user.userid }, SECRET);
+                    return res.json({ token });
                 } else {
-                    return res.status(400).json({ error: "User doesn't exist" });
+                    return res.status(400).json({ error: "Password doesn't match" });
                 }
+            } else {
+                return res.status(400).json({ error: "User doesn't exist" });
             }
         });
+
     } catch (error) {
         res.status(400).json({ error: error });
     }
