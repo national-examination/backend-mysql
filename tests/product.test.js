@@ -17,7 +17,7 @@ describe('Product API Tests', () => {
             .post('/login')
             .send({ userid: 'testuser', password: 'testpassword' });
 
-        token = response._body.token
+        token = response._body.token;
         expect(response.status).toBe(200);
         expect(token).toBeDefined();
         expect(typeof token).toBe('string');

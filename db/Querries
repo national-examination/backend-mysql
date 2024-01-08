@@ -109,3 +109,14 @@ BEGIN
 END //
 DELIMITER ;
 -----------
+
+DELIMITER //
+CREATE PROCEDURE usp_get_product_by_name(
+    IN p_name NVARCHAR(100)
+)
+BEGIN
+    SELECT * FROM product
+    WHERE name = p_name;
+END //
+DELIMITER ;
+-----------

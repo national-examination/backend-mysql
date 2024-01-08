@@ -3,25 +3,7 @@ const { Router } = require("express");
 const dbConnection = require('../db/db');
 const router = Router();
 const dbService = require("../Services/DbService");
-// const authenticateToken = require("../middlewares/jwt.middleware");
-const jwt = require("jsonwebtoken");
-
-// Middleware to verify JWT token
-const authenticateToken = async (req, res, next) => {
-    try {
-        let token = req.headers.authorization;
-        if (!token) {
-            return res.status(401).json({ error: "Unauthorized - Token not provided" });
-        }
-        token = token.split(' ')[1];
-        await jwt.verify(token, process.env.SECRET);
-
-        next();
-    } catch (error) {
-        console.error('Error verifying token:', error);
-        res.status(401).json({ error: "Unauthorized - Invalid token" });
-    }
-};
+const authenticateToken = require("../middlewares/jwt.middleware");
 
 router.use(authenticateToken);
 
@@ -32,10 +14,8 @@ router.get("/all", async (req, res) => {
 
         await dbService.common_db_call("usp_list_product", parameters, (err, result) => {
             if (err) {
-                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
-            // console.log(result);
             return res.status(200).json({ result })
         });
 
@@ -59,7 +39,6 @@ router.get("/:id", async (req, res) => {
 
         await dbService.common_db_call("usp_get_product", parameters, (err, result) => {
             if (err) {
-                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             if (result[0].length == 0)
@@ -80,20 +59,32 @@ router.post("/create", async (req, res) => {
         if (!name || !price) {
             return res.status(400).json({ error: 'Name and Price are required' });
         }
+        const parametersByName = [
+            { ParamName: "name", Value: name, Direction: 0, DataType: "nvarchar" }
+        ]
         const parameters = [
             { ParamName: "name", Value: name, Direction: 0, DataType: "nvarchar" },
             { ParamName: "description", Value: description, Direction: 0, DataType: "nvarchar" },
             { ParamName: "price", Value: price, Direction: 0, DataType: "int" }
         ];
 
-        await dbService.common_db_call("usp_ins_product", parameters, (err, result) => {
+        await dbService.common_db_call("usp_get_product_by_name", parametersByName, async (err, result) => {
             if (err) {
-                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
-            // console.log(result);
-            return res.status(200).json({ message: "Created successfully!", name: name, description: description, price: price })
+
+            if (result[0].length != 0)
+                return res.status(400).send({ message: "Product already exist!" });
+
+            await dbService.common_db_call("usp_ins_product", parameters, (err, result) => {
+                if (err) {
+                    return res.status(500).send("data service error: " + err.message);
+                }
+                // console.log("Inserted product:", result);
+                return res.status(200).json({ message: "Created successfully!", name: name, description: description, price: price })
+            });
         });
+
     } catch (error) {
         res.status(400).json({ error: error });
     }
@@ -123,7 +114,6 @@ router.put("/update/:id", async (req, res) => {
 
         await dbService.common_db_call("usp_get_product", productParam, async (err, result) => {
             if (err) {
-                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             if (result[0].length == 0)
@@ -131,10 +121,8 @@ router.put("/update/:id", async (req, res) => {
 
             await dbService.common_db_call("usp_upd_product", parameters, (err, result) => {
                 if (err) {
-                    // console.log("data service error: " + err);
                     return res.status(500).send("data service error: " + err.message);
                 }
-                // console.log(result);
                 return res.status(201).json({ message: "Updated Successfully!", id: result.id, name, description, price });
             });
         });
@@ -164,15 +152,15 @@ router.delete("/:id", async (req, res) => {
             if (result[0].length == 0)
                 return res.status(200).send({ message: "Product not found!" });
 
-                await dbService.common_db_call("usp_del_product", parameters, (err, result) => {
-                    if (err) {
-                        return res.status(500).send("data service error: " + err.message);
-                    }
-                    return res.status(200).json({ message: "Deleted successfully!" })
-                });
+            await dbService.common_db_call("usp_del_product", parameters, (err, result) => {
+                if (err) {
+                    return res.status(500).send("data service error: " + err.message);
+                }
+                return res.status(200).json({ message: "Deleted successfully!" })
+            });
         });
 
-       
+
 
     } catch (error) {
         res.status(400).json({ error });

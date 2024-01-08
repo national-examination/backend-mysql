@@ -24,15 +24,13 @@ async function common_db_call(spName, plist, callback) {
         });
 
         const query = `CALL ${spName}(${queryParams.map(() => '?').join(', ')})`;
-        // console.log(query);
 
         connection.query(query, queryParams, (err, result) => {
             if (err) {
-                console.log(err);
+                // console.log(err);
                 connection.end();
                 return callback(err, null);
             }
-            // console.log("Result from service: ", result)
             callback(null, result);
             connection.end();
         });
