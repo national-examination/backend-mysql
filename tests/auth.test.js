@@ -13,8 +13,15 @@ describe('Authentication API Tests', () => {
       .send({ userid: 'testuser', password: 'testpassword' });
 
     expect(response.status).toBe(201);
-    // expect(response.body).toHaveProperty('userid', 'testuser');
   });
+
+  it('should not be able to login if they have not registered', async () => {
+    const response = await request(app)
+      .post('/login')
+      .send({ userid: 'wrong@example.com', password: 'nope' });
+
+    expect(response.status).toBe(400);
+  })
 
   it('should check if all inputs are provided', async () => {
     const response = await request(app)

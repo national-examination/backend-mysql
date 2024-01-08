@@ -2,7 +2,6 @@ require("dotenv").config();
 const { Router } = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const dbConnection = require('../db/db');
 const router = Router();
 
 const { SECRET = "secret" } = process.env;
