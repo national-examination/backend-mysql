@@ -24,7 +24,7 @@ async function common_db_call(spName, plist, callback) {
         });
 
         const query = `CALL ${spName}(${queryParams.map(() => '?').join(', ')})`;
-        console.log(query);
+        // console.log(query);
 
         connection.query(query, queryParams, (err, result) => {
             if (err) {
@@ -32,7 +32,7 @@ async function common_db_call(spName, plist, callback) {
                 connection.end();
                 return callback(err, null);
             }
-            console.log("Result from service: ", result)
+            // console.log("Result from service: ", result)
             callback(null, result);
             connection.end();
         });

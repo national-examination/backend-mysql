@@ -17,11 +17,11 @@ describe('Product API Tests', () => {
             .post('/login')
             .send({ userid: 'testuser', password: 'testpassword' });
 
+        token = response._body.token
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('token');
-        token = response.body.token;
+        expect(token).toBeDefined();
+        expect(typeof token).toBe('string');
     });
-    console.log(token);
 
     // Test the get all products route
     it('should get all products', async () => {
@@ -46,8 +46,6 @@ describe('Product API Tests', () => {
         expect(response.body).toHaveProperty('description', 'Test Description');
         expect(response.body).toHaveProperty('price', 19.99);
     });
-
-    console.log(productId);
 
     // Test the get product by ID route
     it('should get a product by ID', async () => {

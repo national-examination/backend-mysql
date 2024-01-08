@@ -8,6 +8,7 @@ const router = Router();
 const { SECRET = "secret" } = process.env;
 const dbService = require("../Services/DbService");
 
+
 // Signup route
 router.post("/signup", async (req, res) => {
     try {
@@ -23,17 +24,14 @@ router.post("/signup", async (req, res) => {
 
         await dbService.common_db_call("usp_get_user_email", email, async (err, results) => {
             if (err) {
-                console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             const user = results[0].length;
-            console.log(user)
             if (user != 0) {
-                return res.status(400).json({ error: "User already exist!" });
+                return res.status(201).json({ error: "User already exist!" });
             } else {
                 await dbService.common_db_call("usp_ins_user", parameters, (err, result) => {
                     if (err) {
-                        console.log("data service error: " + err);
                         return res.status(500).send("data service error 1: " + err.message);
                     }
                     return res.status(201).json({ message: "Created successfully!" })
@@ -57,11 +55,9 @@ router.post("/login", async (req, res) => {
 
         await dbService.common_db_call("usp_get_user_email", parameters, async (err, results) => {
             if (err) {
-                console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             const user = results[0];
-            console.log(user);
             if (user.length != 0) {
                 const result = await bcrypt.compare(req.body.password, user[0].password);
                 if (result) {

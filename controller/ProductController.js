@@ -2,8 +2,9 @@ require("dotenv").config();
 const { Router } = require("express");
 const dbConnection = require('../db/db');
 const router = Router();
-const jwt = require("jsonwebtoken");
 const dbService = require("../Services/DbService");
+// const authenticateToken = require("../middlewares/jwt.middleware");
+const jwt = require("jsonwebtoken");
 
 // Middleware to verify JWT token
 const authenticateToken = async (req, res, next) => {
@@ -31,10 +32,10 @@ router.get("/all", async (req, res) => {
 
         await dbService.common_db_call("usp_list_product", parameters, (err, result) => {
             if (err) {
-                console.log("data service error: " + err);
+                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
-            console.log(result);
+            // console.log(result);
             return res.status(200).json({ result })
         });
 
@@ -58,7 +59,7 @@ router.get("/:id", async (req, res) => {
 
         await dbService.common_db_call("usp_get_product", parameters, (err, result) => {
             if (err) {
-                console.log("data service error: " + err);
+                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             if (result[0].length == 0)
@@ -87,10 +88,10 @@ router.post("/create", async (req, res) => {
 
         await dbService.common_db_call("usp_ins_product", parameters, (err, result) => {
             if (err) {
-                console.log("data service error: " + err);
+                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
-            console.log(result);
+            // console.log(result);
             return res.status(200).json({ message: "Created successfully!", name: name, description: description, price: price })
         });
     } catch (error) {
@@ -122,7 +123,7 @@ router.put("/update/:id", async (req, res) => {
 
         await dbService.common_db_call("usp_get_product", productParam, async (err, result) => {
             if (err) {
-                console.log("data service error: " + err);
+                // console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             if (result[0].length == 0)
@@ -130,10 +131,10 @@ router.put("/update/:id", async (req, res) => {
 
             await dbService.common_db_call("usp_upd_product", parameters, (err, result) => {
                 if (err) {
-                    console.log("data service error: " + err);
+                    // console.log("data service error: " + err);
                     return res.status(500).send("data service error: " + err.message);
                 }
-                console.log(result);
+                // console.log(result);
                 return res.status(201).json({ message: "Updated Successfully!", id: result.id, name, description, price });
             });
         });
@@ -156,16 +157,22 @@ router.delete("/:id", async (req, res) => {
             { ParamName: "id", Value: productId, Direction: 0, DataType: "int" }
         ];
 
-        await dbService.common_db_call("usp_del_product", parameters, (err, result) => {
+        await dbService.common_db_call("usp_get_product", parameters, async (err, result) => {
             if (err) {
-                console.log("data service error: " + err);
                 return res.status(500).send("data service error: " + err.message);
             }
             if (result[0].length == 0)
-                return res.status(400).send({ message: "Product not found!" });
+                return res.status(200).send({ message: "Product not found!" });
 
-            return res.status(200).json({ message: "Deleted successfully!" })
+                await dbService.common_db_call("usp_del_product", parameters, (err, result) => {
+                    if (err) {
+                        return res.status(500).send("data service error: " + err.message);
+                    }
+                    return res.status(200).json({ message: "Deleted successfully!" })
+                });
         });
+
+       
 
     } catch (error) {
         res.status(400).json({ error });
